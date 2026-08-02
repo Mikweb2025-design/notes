@@ -5,7 +5,7 @@
 
 import { defineStore } from 'pinia'
 import logger from '../Logger.js'
-import { copyNote } from '../Util.js'
+import { copyNote, isColorCategory } from '../Util.js'
 import { useAppStore } from './app.js'
 
 export const useNotesStore = defineStore('notes', {
@@ -58,10 +58,14 @@ export const useNotesStore = defineStore('notes', {
 				return cat
 			}
 
-			// get categories from notes
+			// get categories from notes (color-encoded "colorsync-#..." categories
+			// are internal to the NoTeSynC app and excluded from the sidebar UI)
 			const categories = {}
 			for (const note of state.notes) {
 				const cat = normalizeCategory(note.category)
+				if (isColorCategory(cat)) {
+					continue
+				}
 				if (categories[cat] === undefined) {
 					categories[cat] = 1
 				} else {
@@ -74,7 +78,7 @@ export const useNotesStore = defineStore('notes', {
 					continue
 				}
 				const cat = normalizeCategory(category)
-				if (!cat) {
+				if (!cat || isColorCategory(cat)) {
 					continue
 				}
 				if (categories[cat] === undefined) {

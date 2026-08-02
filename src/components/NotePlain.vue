@@ -38,6 +38,29 @@
 					<span class="note-due-dot" :style="{ backgroundColor: noteColor || 'var(--color-primary-element)' }" />
 					{{ t('notes', 'Due') }}: {{ formatDueDate(dueDate) }}
 				</div>
+				<div v-if="note" class="note-color-toolbar">
+					<span class="note-color-toolbar-label">{{ t('notes', 'Color') }}</span>
+					<button
+						v-for="swatch in palette"
+						:key="swatch"
+						class="note-color-swatch"
+						:class="{ active: swatch === noteColor }"
+						:style="{ backgroundColor: swatch }"
+						:title="swatch"
+						:disabled="note.readonly"
+						@click="onPickColor(swatch)"
+					>
+						<span v-if="swatch === noteColor" class="note-color-check">✓</span>
+					</button>
+					<button
+						class="note-color-clear"
+						:title="t('notes', 'Remove color')"
+						:disabled="note.readonly || !noteColor"
+						@click="onRemoveColor"
+					>
+						<CloseIcon :size="16" />
+					</button>
+				</div>
 				<div v-show="!note.content" class="placeholder">
 					{{ preview ? t('notes', 'Empty note') : t('notes', 'Write …') }}
 				</div>
@@ -117,6 +140,7 @@ import NcActionButton from '@nextcloud/vue/components/NcActionButton'
 import NcActions from '@nextcloud/vue/components/NcActions'
 import NcAppContent from '@nextcloud/vue/components/NcAppContent'
 import NcModal from '@nextcloud/vue/components/NcModal'
+import CloseIcon from 'vue-material-design-icons/Close.vue'
 import EyeOutlineIcon from 'vue-material-design-icons/EyeOutline.vue'
 import FullscreenIcon from 'vue-material-design-icons/Fullscreen.vue'
 import PencilOffOutlineIcon from 'vue-material-design-icons/PencilOffOutline.vue'
@@ -127,14 +151,15 @@ import TheEditor from './EditorEasyMDE.vue'
 import ThePreview from './EditorMarkdownIt.vue'
 import { config } from '../config.js'
 import logger from '../Logger.js'
-import { conflictSolutionLocal, conflictSolutionRemote, fetchNote, queueCommand, refreshNote, saveNoteManually } from '../NotesService.js'
+import { conflictSolutionLocal, conflictSolutionRemote, fetchNote, queueCommand, refreshNote, saveNoteManually, setCategory } from '../NotesService.js'
 import store from '../store.js'
-import { dueDateFromNote, formatDueDate, noteColorFromCategory, routeIsNewNote } from '../Util.js'
+import { colorCategoryPrefix, dueDateFromNote, formatDueDate, noteColorFromCategory, noteColorPalette, routeIsNewNote } from '../Util.js'
 
 export default {
 	name: 'NotePlain',
 
 	components: {
+		CloseIcon,
 		ConflictSolution,
 		PencilOutlineIcon,
 		EyeOutlineIcon,
@@ -195,6 +220,10 @@ export default {
 
 		dueDate() {
 			return this.note ? dueDateFromNote(this.note.content) : null
+		},
+
+		palette() {
+			return noteColorPalette
 		},
 
 		isManualSave() {
@@ -282,6 +311,20 @@ export default {
 		},
 
 		formatDueDate,
+
+		onPickColor(color) {
+			if (!this.note || this.note.readonly || this.noteColor === color) {
+				return
+			}
+			setCategory(this.note.id, colorCategoryPrefix + color).catch(() => {})
+		},
+
+		onRemoveColor() {
+			if (!this.note || this.note.readonly || !this.noteColor) {
+				return
+			}
+			setCategory(this.note.id, '').catch(() => {})
+		},
 
 		onDetectFullscreen() {
 			this.fullscreen = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen
@@ -488,6 +531,74 @@ export default {
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
+}
+
+.note-color-toolbar {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 0.8em;
+}
+
+.note-color-toolbar-label {
+	font-size: 13px;
+	font-weight: bold;
+	margin-inline-end: 2px;
+	opacity: 0.7;
+}
+
+.note-color-swatch {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 1px solid var(--color-border);
+	border-radius: 50%;
+	cursor: pointer;
+	transition: transform 0.1s ease;
+
+	&:hover,
+	&:active {
+		transform: scale(1.15);
+	}
+
+	&.active {
+		box-shadow: 0 0 0 2px var(--color-primary-element);
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.5;
+	}
+}
+
+.note-color-check {
+	font-size: 14px;
+	font-weight: bold;
+	color: #333;
+}
+
+.note-color-clear {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	margin-inline-start: 4px;
+	padding: 0;
+	color: var(--color-error);
+	background-color: transparent;
+	border: 1px solid var(--color-border);
+	border-radius: 50%;
+	cursor: pointer;
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.4;
+	}
 }
 
 .note-editor {

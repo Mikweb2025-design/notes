@@ -36,6 +36,32 @@ export function categoryLabel(category) {
 
 export const colorCategoryPrefix = 'colorsync-'
 
+// The ColorNote-style palette used by the NoTeSynC / ColorNoteSync Android app
+// (in display order). The web editor offers the same swatches so colors round-trip.
+export const noteColorPalette = [
+	'#fff59d',
+	'#ffcc80',
+	'#ef9a9a',
+	'#f48fb1',
+	'#ce93d8',
+	'#b39ddb',
+	'#90caf9',
+	'#a5d6a7',
+	'#e6ee9c',
+	'#ffffff',
+	'#e0e0e0',
+	'#b0bec5',
+]
+
+/**
+ * Tells whether a category is a "colorsync-#RRGGBB" color-encoded one.
+ *
+ * @param {string} category the note's category string
+ */
+export function isColorCategory(category) {
+	return noteColorFromCategory(category) !== null
+}
+
 /**
  * Parses a "colorsync-#RRGGBB" category into a lower-case hex color like
  * "#ff0000", or null if the category is not a color-encoded one.
