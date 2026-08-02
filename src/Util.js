@@ -29,6 +29,59 @@ export function categoryLabel(category) {
 	return category === '' ? t('notes', 'Uncategorized') : category.replace(/\//g, ' / ')
 }
 
+// The NoTeSynC / ColorNoteSync Android app stores a note's color as its category
+// in the Nextcloud Notes API (e.g. "colorsync-#FF0000"). There is no native
+// color field, so the web app derives the color from the category to render a
+// colored dot / tinted editor, while staying fully backwards compatible.
+
+export const colorCategoryPrefix = 'colorsync-'
+
+/**
+ * Parses a "colorsync-#RRGGBB" category into a lower-case hex color like
+ * "#ff0000", or null if the category is not a color-encoded one.
+ *
+ * @param {string} category the note's category string
+ */
+export function noteColorFromCategory(category) {
+	if (typeof category !== 'string' || !category.startsWith(colorCategoryPrefix)) {
+		return null
+	}
+	const hex = category.slice(colorCategoryPrefix.length)
+	return /^#[0-9a-fA-F]{6}$/.test(hex) ? hex.toLowerCase() : null
+}
+
+/**
+ * Parses the leading "[due:YYYY-MM-DD]" marker line the Android app embeds in
+ * the note content (there is no due-date field in the Notes API). Returns the
+ * date string "YYYY-MM-DD" or null if absent.
+ *
+ * @param {string} content the note's markdown content
+ */
+export function dueDateFromNote(content) {
+	if (typeof content !== 'string') {
+		return null
+	}
+	const match = /^\[due:(\d{4}-\d{2}-\d{2})\]\n?/.exec(content)
+	return match ? match[1] : null
+}
+
+// Localized long date form: "2026-08-05" -> "5 Aug 2026" per the user's locale
+export function formatDueDate(date) {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+	if (!match) {
+		return date
+	}
+	const [y, m, d] = match.slice(1).map(Number)
+	const parsed = new Date(y, m - 1, d)
+	if (Number.isNaN(parsed.getTime())
+		|| parsed.getFullYear() !== y
+		|| parsed.getMonth() !== m - 1
+		|| parsed.getDate() !== d) {
+		return date
+	}
+	return parsed.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+}
+
 export function routeIsNewNote($route) {
 	return Object.hasOwn($route.query, 'new')
 }

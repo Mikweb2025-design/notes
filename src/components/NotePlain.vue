@@ -33,6 +33,11 @@
 				</div>
 			</NcModal>
 			<div class="note-editor">
+				<div v-if="noteColor" class="note-color-bar" :style="{ backgroundColor: noteColor }" />
+				<div v-if="dueDate" class="note-due-bar" :title="t('notes', 'Due date')">
+					<span class="note-due-dot" :style="{ backgroundColor: noteColor || 'var(--color-primary-element)' }" />
+					{{ t('notes', 'Due') }}: {{ formatDueDate(dueDate) }}
+				</div>
 				<div v-show="!note.content" class="placeholder">
 					{{ preview ? t('notes', 'Empty note') : t('notes', 'Write …') }}
 				</div>
@@ -124,7 +129,7 @@ import { config } from '../config.js'
 import logger from '../Logger.js'
 import { conflictSolutionLocal, conflictSolutionRemote, fetchNote, queueCommand, refreshNote, saveNoteManually } from '../NotesService.js'
 import store from '../store.js'
-import { routeIsNewNote } from '../Util.js'
+import { dueDateFromNote, formatDueDate, noteColorFromCategory, routeIsNewNote } from '../Util.js'
 
 export default {
 	name: 'NotePlain',
@@ -182,6 +187,14 @@ export default {
 
 		isNewNote() {
 			return routeIsNewNote(this.$route)
+		},
+
+		noteColor() {
+			return this.note ? noteColorFromCategory(this.note.category) : null
+		},
+
+		dueDate() {
+			return this.note ? dueDateFromNote(this.note.content) : null
 		},
 
 		isManualSave() {
@@ -267,6 +280,8 @@ export default {
 			this.preview = !this.preview
 			this.actionsOpen = false
 		},
+
+		formatDueDate,
 
 		onDetectFullscreen() {
 			this.fullscreen = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen
@@ -446,6 +461,33 @@ export default {
 	min-height: 100%;
 	width: 100%;
 	background-color: var(--color-main-background);
+	position: relative;
+}
+
+/* NoTeSynC: color accent derived from the note's "colorsync-#RRGGBB" category */
+.note-color-bar {
+	position: absolute;
+	top: 0;
+	inset-inline: 0;
+	height: 4px;
+}
+
+.note-due-bar {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 13px;
+	margin-bottom: 0.6em;
+	padding: 3px 10px;
+	border-radius: 12px;
+	color: var(--color-primary-text);
+	background-color: var(--color-primary-element-light);
+}
+
+.note-due-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
 }
 
 .note-editor {

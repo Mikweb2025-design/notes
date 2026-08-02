@@ -14,8 +14,21 @@
 		@click="onNoteSelected(note.id)"
 		@dragstart="onDragStart"
 	>
-		<template v-if="showCategoryTitle" #subname>
-			{{ categoryTitle }}
+		<template v-if="noteColor || dueDate || showCategoryTitle" #subname>
+			<div class="note-subname">
+				<span v-if="noteColor"
+					class="note-color-dot"
+					:style="{ backgroundColor: noteColor }"
+					:title="t('notes', 'Colored note')"
+				/>
+				<span v-if="dueDate" class="note-due-badge" :title="t('notes', 'Due date')">
+					<CalendarBlankOutlineIcon :size="15" />
+					{{ formatDueDate(dueDate) }}
+				</span>
+				<span v-if="showCategoryTitle && !noteColor" class="note-category-label">
+					{{ categoryTitle }}
+				</span>
+			</div>
 		</template>
 		<template #icon>
 			<AlertOctagonOutlineIcon v-if="note.error"
@@ -106,6 +119,7 @@ import NcActionInput from '@nextcloud/vue/components/NcActionInput'
 import NcActionSeparator from '@nextcloud/vue/components/NcActionSeparator'
 import NcListItem from '@nextcloud/vue/components/NcListItem'
 import AlertOctagonOutlineIcon from 'vue-material-design-icons/AlertOctagonOutline.vue'
+import CalendarBlankOutlineIcon from 'vue-material-design-icons/CalendarBlankOutline.vue'
 import FolderOutlineIcon from 'vue-material-design-icons/FolderOutline.vue'
 import PencilOutlineIcon from 'vue-material-design-icons/PencilOutline.vue'
 import ShareVariantOutlineIcon from 'vue-material-design-icons/ShareVariantOutline.vue'
@@ -113,13 +127,14 @@ import StarIcon from 'vue-material-design-icons/Star.vue'
 import logger from '../Logger.js'
 import { deleteNote, fetchNote, setCategory, setFavorite, setTitle } from '../NotesService.js'
 import store from '../store.js'
-import { categoryLabel, routeIsNewNote } from '../Util.js'
+import { categoryLabel, dueDateFromNote, formatDueDate, noteColorFromCategory, routeIsNewNote } from '../Util.js'
 
 export default {
 	name: 'NoteItem',
 
 	components: {
 		AlertOctagonOutlineIcon,
+		CalendarBlankOutlineIcon,
 		FolderOutlineIcon,
 		NcActionButton,
 		NcListItem,
@@ -185,6 +200,14 @@ export default {
 			return categoryLabel(this.note.category)
 		},
 
+		noteColor() {
+			return noteColorFromCategory(this.note.category)
+		},
+
+		dueDate() {
+			return dueDateFromNote(this.note.content)
+		},
+
 		actionFavoriteText() {
 			return this.note.favorite ? this.t('notes', 'Remove from favorites') : this.t('notes', 'Add to favorites')
 		},
@@ -228,6 +251,8 @@ export default {
 	},
 
 	methods: {
+		formatDueDate,
+
 		onDragStart(event) {
 			if (!this.isDraggable) {
 				event.preventDefault()
@@ -349,6 +374,39 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.note-subname {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+
+	.note-color-dot {
+		flex: none;
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		opacity: 0.9;
+	}
+
+	.note-due-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		flex: none;
+		font-size: 12px;
+		padding: 1px 6px;
+		border-radius: 10px;
+		color: var(--color-primary-text);
+		background-color: var(--color-primary-element-light);
+	}
+
+	.note-category-label {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+}
+
 .material-design-icon {
 	width: var(--default-clickable-area);
 	.list-item__wrapper--active & {
