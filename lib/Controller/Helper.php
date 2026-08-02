@@ -55,6 +55,7 @@ class Helper {
 		}
 		$data = $note->getData($exclude);
 		$data['etag'] = $meta->getEtag();
+		$data['color'] = $meta->getColor();
 		return $data;
 	}
 

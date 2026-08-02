@@ -109,8 +109,9 @@ class NotesApiController extends ApiController {
 		string $content = '',
 		int $modified = 0,
 		bool $favorite = false,
+		?string $color = null,
 	) : JSONResponse {
-		return $this->helper->handleErrorResponse(function () use ($category, $title, $content, $modified, $favorite) {
+		return $this->helper->handleErrorResponse(function () use ($category, $title, $content, $modified, $favorite, $color) {
 			$note = $this->service->create($this->helper->getUID(), $title, $category);
 			try {
 				$note->setContent($content);
@@ -119,6 +120,9 @@ class NotesApiController extends ApiController {
 				}
 				if ($favorite) {
 					$note->setFavorite($favorite);
+				}
+				if ($color !== null) {
+					$this->metaService->setColor($this->helper->getUID(), $note, $color);
 				}
 			} catch (\Throwable $e) {
 				// roll-back note creation
@@ -140,10 +144,11 @@ class NotesApiController extends ApiController {
 		string $content = '',
 		int $modified = 0,
 		bool $favorite = false,
+		?string $color = null,
 	) : JSONResponse {
-		return $this->helper->handleErrorResponse(function () use ($category, $content, $modified, $favorite) {
+		return $this->helper->handleErrorResponse(function () use ($category, $content, $modified, $favorite, $color) {
 			$title = $this->service->getTitleFromContent($content);
-			return $this->create($category, $title, $content, $modified, $favorite);
+			return $this->create($category, $title, $content, $modified, $favorite, $color);
 		});
 	}
 
@@ -160,6 +165,7 @@ class NotesApiController extends ApiController {
 		?string $title = null,
 		?string $category = null,
 		?bool $favorite = null,
+		?string $color = null,
 	) : JSONResponse {
 		return $this->helper->handleErrorResponse(function () use (
 			$id,
@@ -167,7 +173,8 @@ class NotesApiController extends ApiController {
 			$modified,
 			$title,
 			$category,
-			$favorite
+			$favorite,
+			$color
 		) {
 			$note = $this->helper->getNoteWithETagCheck($id, $this->request);
 			if ($content !== null && $content !== $note->getContent()) {
@@ -183,6 +190,9 @@ class NotesApiController extends ApiController {
 			}
 			if ($favorite !== null && $favorite !== $note->getFavorite()) {
 				$note->setFavorite($favorite);
+			}
+			if ($color !== null) {
+				$this->metaService->setColor($this->helper->getUID(), $note, $color);
 			}
 			return $this->helper->getNoteData($note);
 		});
@@ -200,15 +210,16 @@ class NotesApiController extends ApiController {
 		?int $modified = null,
 		?string $category = null,
 		?bool $favorite = null,
+		?string $color = null,
 	) : JSONResponse {
-		return $this->helper->handleErrorResponse(function () use ($id, $content, $modified, $category, $favorite) {
+		return $this->helper->handleErrorResponse(function () use ($id, $content, $modified, $category, $favorite, $color) {
 			if ($content === null) {
 				$note = $this->service->get($this->helper->getUID(), $id);
 				$title = $this->service->getTitleFromContent($note->getContent());
 			} else {
 				$title = $this->service->getTitleFromContent($content);
 			}
-			return $this->update($id, $content, $modified, $title, $category, $favorite);
+			return $this->update($id, $content, $modified, $title, $category, $favorite, $color);
 		});
 	}
 

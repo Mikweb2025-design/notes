@@ -25,6 +25,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setContentEtag(string $value)
  * @method string getFileEtag()
  * @method void setFileEtag(string $value)
+ * @method string|null getColor()
+ * @method void setColor(string|null $value)
  * @package OCA\Notes\Db
  */
 class Meta extends Entity {
@@ -34,4 +36,5 @@ class Meta extends Entity {
 	protected $etag;
 	protected $contentEtag;
 	protected $fileEtag;
+	protected $color;
 }

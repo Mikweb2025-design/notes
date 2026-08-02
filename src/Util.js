@@ -29,10 +29,11 @@ export function categoryLabel(category) {
 	return category === '' ? t('notes', 'Uncategorized') : category.replace(/\//g, ' / ')
 }
 
-// The NoTeSynC / ColorNoteSync Android app stores a note's color as its category
-// in the Nextcloud Notes API (e.g. "colorsync-#FF0000"). There is no native
-// color field, so the web app derives the color from the category to render a
-// colored dot / tinted editor, while staying fully backwards compatible.
+// The NoTeSynC / ColorNoteSync Android app historically stored a note's color as
+// its category (e.g. "colorsync-#FF0000") because the Nextcloud Notes API had no
+// color field. The fork now keeps the color in its own API/DB field ("color") that
+// coexists with a real category; the "colorsync-#..." category encoding is still
+// honoured as a fallback so existing notes keep their color after upgrade.
 
 export const colorCategoryPrefix = 'colorsync-'
 
@@ -74,6 +75,20 @@ export function noteColorFromCategory(category) {
 	}
 	const hex = category.slice(colorCategoryPrefix.length)
 	return /^#[0-9a-fA-F]{6}$/.test(hex) ? hex.toLowerCase() : null
+}
+
+/**
+ * Resolves a note's effective color. Prefers the note's own "color" field
+ * (the fork's first-class color that coexists with a category), and falls back
+ * to a legacy "colorsync-#RRGGBB" category for notes that predate it.
+ *
+ * @param {object} note the note object (may have .color and .category)
+ */
+export function noteColorFromNote(note) {
+	if (note && typeof note.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(note.color)) {
+		return note.color.toLowerCase()
+	}
+	return note ? noteColorFromCategory(note.category) : null
 }
 
 /**

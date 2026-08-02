@@ -25,7 +25,7 @@
 					<CalendarBlankOutlineIcon :size="15" />
 					{{ formatDueDate(dueDate) }}
 				</span>
-				<span v-if="showCategoryTitle && !noteColor" class="note-category-label">
+				<span v-if="showCategoryTitle" class="note-category-label">
 					{{ categoryTitle }}
 				</span>
 			</div>
@@ -127,7 +127,7 @@ import StarIcon from 'vue-material-design-icons/Star.vue'
 import logger from '../Logger.js'
 import { deleteNote, fetchNote, setCategory, setFavorite, setTitle } from '../NotesService.js'
 import store from '../store.js'
-import { categoryLabel, dueDateFromNote, formatDueDate, noteColorFromCategory, routeIsNewNote } from '../Util.js'
+import { categoryLabel, dueDateFromNote, formatDueDate, isColorCategory, noteColorFromNote, routeIsNewNote } from '../Util.js'
 
 export default {
 	name: 'NoteItem',
@@ -197,11 +197,12 @@ export default {
 		},
 
 		categoryTitle() {
-			return categoryLabel(this.note.category)
+			// legacy "colorsync-#..." categories are color markers, not real folders
+			return isColorCategory(this.note.category) ? '' : categoryLabel(this.note.category)
 		},
 
 		noteColor() {
-			return noteColorFromCategory(this.note.category)
+			return noteColorFromNote(this.note)
 		},
 
 		dueDate() {

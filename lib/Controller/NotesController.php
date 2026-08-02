@@ -12,6 +12,7 @@ namespace OCA\Notes\Controller;
 
 use OCA\Notes\Service\Note;
 use OCA\Notes\Service\NotesService;
+use OCA\Notes\Service\MetaService;
 use OCA\Notes\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -35,6 +36,7 @@ class NotesController extends Controller {
 		private ILockManager $lockManager,
 		private SettingsService $settingsService,
 		private Helper $helper,
+		private MetaService $metaService,
 		private IConfig $settings,
 		private IL10N $l10n,
 		private IMimeTypeDetector $mimeTypeDetector,
@@ -239,6 +241,7 @@ class NotesController extends Controller {
 		?string $title = null,
 		?string $category = null,
 		?bool $favorite = null,
+		?string $color = null,
 	) : JSONResponse {
 		return $this->helper->handleErrorResponse(function () use (
 			$id,
@@ -246,9 +249,11 @@ class NotesController extends Controller {
 			$modified,
 			$title,
 			$category,
-			$favorite
+			$favorite,
+			$color
 		) {
-			$note = $this->notesService->get($this->helper->getUID(), $id);
+			$userId = $this->helper->getUID();
+			$note = $this->notesService->get($userId, $id);
 			$result = null;
 			switch ($property) {
 				case 'modified':
@@ -284,6 +289,11 @@ class NotesController extends Controller {
 						$note->setFavorite($favorite);
 					}
 					$result = $note->getFavorite();
+					break;
+
+				case 'color':
+					$meta = $this->metaService->setColor($userId, $note, $color);
+					$result = $meta->getColor();
 					break;
 
 				default:

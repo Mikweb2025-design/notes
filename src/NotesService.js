@@ -341,6 +341,23 @@ export function setFavorite(noteId, favorite) {
 		})
 }
 
+// Sets (or clears) a note's color. Pass '' to remove the color. The color is a
+// first-class field that coexists with the note's category, so picking a color
+// no longer replaces the folder the note lives in.
+export function setColor(noteId, color) {
+	return axios
+		.put(url('/notes/' + noteId + '/color'), { color: color || '' })
+		.then((response) => {
+			const realColor = response.data || ''
+			store.notes.setNoteAttribute({ noteId, attribute: 'color', value: realColor || null })
+		})
+		.catch((err) => {
+			logger.error('Updating the color for note has failed', { noteId, error: err })
+			handleSyncError(t('notes', 'Updating the color for note {id} has failed.', { id: noteId }), err)
+			throw err
+		})
+}
+
 export function setCategory(noteId, category) {
 	return axios
 		.put(url('/notes/' + noteId + '/category'), { category })

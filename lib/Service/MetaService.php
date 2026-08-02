@@ -66,6 +66,21 @@ class MetaService {
 		$this->metaMapper->deleteByNote($id);
 	}
 
+	/** Sets (or clears) a note's color and bumps the ETag/LastUpdate so
+	 * synchronized clients pick up the change. The color is kept separate from
+	 * the category, so a note can have both a color and a (real) folder. */
+	public function setColor(string $userId, Note $note, ?string $color) : Meta {
+		$meta = $this->update($userId, $note);
+		$color = ($color === null || $color === '') ? null : $color;
+		if ($color !== $meta->getColor()) {
+			$meta->setColor($color);
+			$meta->setLastUpdate(time());
+			$meta->setEtag($this->generateEtag($meta, $note));
+			$this->metaMapper->update($meta);
+		}
+		return $meta;
+	}
+
 	public function getAll(string $userId, array $notes, bool $forceUpdate = false) : array {
 		// load data
 		$metas = $this->metaMapper->getAll($userId);
@@ -211,6 +226,7 @@ class MetaService {
 			$note->getFavorite(),
 			$note->getReadOnly(),
 			$meta->getContentEtag(),
+			$meta->getColor(),
 		];
 		return md5(json_encode($data));
 	}

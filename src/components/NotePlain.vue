@@ -151,9 +151,9 @@ import TheEditor from './EditorEasyMDE.vue'
 import ThePreview from './EditorMarkdownIt.vue'
 import { config } from '../config.js'
 import logger from '../Logger.js'
-import { conflictSolutionLocal, conflictSolutionRemote, fetchNote, queueCommand, refreshNote, saveNoteManually, setCategory } from '../NotesService.js'
+import { conflictSolutionLocal, conflictSolutionRemote, fetchNote, queueCommand, refreshNote, saveNoteManually, setColor } from '../NotesService.js'
 import store from '../store.js'
-import { colorCategoryPrefix, dueDateFromNote, formatDueDate, noteColorFromCategory, noteColorPalette, routeIsNewNote } from '../Util.js'
+import { dueDateFromNote, formatDueDate, noteColorFromNote, noteColorPalette, routeIsNewNote } from '../Util.js'
 
 export default {
 	name: 'NotePlain',
@@ -215,7 +215,7 @@ export default {
 		},
 
 		noteColor() {
-			return this.note ? noteColorFromCategory(this.note.category) : null
+			return this.note ? noteColorFromNote(this.note) : null
 		},
 
 		dueDate() {
@@ -316,14 +316,14 @@ export default {
 			if (!this.note || this.note.readonly || this.noteColor === color) {
 				return
 			}
-			setCategory(this.note.id, colorCategoryPrefix + color).catch(() => {})
+			setColor(this.note.id, color).catch(() => {})
 		},
 
 		onRemoveColor() {
 			if (!this.note || this.note.readonly || !this.noteColor) {
 				return
 			}
-			setCategory(this.note.id, '').catch(() => {})
+			setColor(this.note.id, '').catch(() => {})
 		},
 
 		onDetectFullscreen() {
